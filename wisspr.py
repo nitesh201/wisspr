@@ -1,7 +1,7 @@
 import sqlite3
 from flask import Flask, request, session, url_for, abort, render_template, \
 flash, g, redirect
-
+from werkzeug import security
 from contextlib import closing
 import requests
 
@@ -44,15 +44,29 @@ def signup():
 	if request.method == 'GET':
 		return render_template('signup.html')
 	elif request.method == 'POST':
-		if request.form["password"] != request.form["pass_confirm"]:
-			error = "Passwords must match!"
+		if not security.safe_str_cmp(request.form["password"],request.form["pass_confirm"]):
+			return "Passwords must match!"
 		else:
-			return "SIGNED UP!"
+			g.db.execute('insert into entries (username, password_hash) values (?, ?)',
+				[request.form["user"], encrypt(request.form["password"])])
+			g.db.commit()
+			return redirect(url_for('home'))
 
 	return render_template('signup.html', error=error)
 
 def authenticate(user, password):
-	return True
+	cur = g.db.execute('select username, password_hash from entries where username = ?', 
+		[user])
+	rv = [dict(username=row[0], password_hash=row[1]) for row in cur.fetchall()]
+
+	if rv:
+		first = rv[0]
+		if security.check_password_hash(first['password_hash'], password):
+			return True
+	return False
+
+def encrypt(string):
+	return security.generate_password_hash(string)	
 
 def connect_db():
     return sqlite3.connect(app.config['DATABASE'])
