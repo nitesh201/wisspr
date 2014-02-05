@@ -7,23 +7,18 @@
     <body>
         <h1> wisspr </h1>
         <form action="/signup" method="post">
-        	<div>
-        		<label for="first">First Name:</label>
-        		<input type="text" id="last" required/>
-        	</div>
-        	<div>
-        		<label for="last">Last Name:</label>
-        		<input type="text" id="last" required/>
-        	</div>
             <div>
-                <label for="email">Email:</label>
-                <input type="text" id="email" required/>
+                <label for="user">Username:</label>
+                <input type="text" name="user" required/>
             </div>
             <div>
                 <label for="password">Password:</label>
-                <input type="password" id="password" required/>
+                <input type="password" name="password" required/>
             </div>
-
+            <div>
+                <label for="pass_confirm">Confirm Password:</label>
+                <input type="password" name="pass_confirm" required/>
+            </div>
 
 
         	<div class="button">
