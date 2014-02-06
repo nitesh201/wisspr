@@ -9,8 +9,6 @@ import requests
 DATABASE = '/tmp/wisspr.db'
 DEBUG = True
 SECRET_KEY = 'development key'
-USERNAME = 'admin'
-PASSWORD = 'default'
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -46,7 +44,7 @@ def signup():
 	elif request.method == 'POST':
 		if not security.safe_str_cmp(request.form["password"],request.form["pass_confirm"]):
 			return "Passwords must match!"
-		else:
+		elif not user_exists(request.form["user"]):
 			g.db.execute('insert into entries (username, password_hash) values (?, ?)',
 				[request.form["user"], encrypt(request.form["password"])])
 			g.db.commit()
@@ -54,6 +52,7 @@ def signup():
 
 	return render_template('signup.html', error=error)
 
+# validates login (for login)
 def authenticate(user, password):
 	cur = g.db.execute('select username, password_hash from entries where username = ?', 
 		[user])
@@ -65,8 +64,17 @@ def authenticate(user, password):
 			return True
 	return False
 
+# validates uniqueness (for signup)
+def user_exists(user):
+	cur = g.db.execute('select username, password_hash from entries where username = ?', 
+		[user])
+	rv = [dict(username=row[0], password_hash=row[1]) for row in cur.fetchall()]
+	if rv:
+		return True
+	return False
+
 def encrypt(string):
-	return security.generate_password_hash(string)	
+	return security.generate_password_hash(string)
 
 def connect_db():
     return sqlite3.connect(app.config['DATABASE'])
