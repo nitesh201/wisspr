@@ -13,9 +13,17 @@ SECRET_KEY = 'development key'
 
 app = Flask(__name__)
 app.config.from_object(__name__)
+
+# Checks whether or not we are running in the production or development environment.
+# In production, will use PostgreSQL. In development, will use sqlite3.
+if not os.environ.has_key('DATABASE_URL'):
+        os.environ['DATABASE_URL'] = 'sqlite:////tmp/dev.db'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 db = SQLAlchemy(app)
-#app.config.from_envvar('WISSPR_SETTINGS', silent=True)
+
+####################################################################################
+
+# ROUTES
 
 @app.route('/')
 def home():
@@ -42,61 +50,59 @@ def logout():
 @app.route('/signup', methods=["GET", "POST"])
 def signup():
 	error = None
+	# If you're simply trying to load the signup page
 	if request.method == 'GET':
 		return render_template('signup.html')
+	# If you've attempted to signup
 	elif request.method == 'POST':
 		if not security.safe_str_cmp(request.form["password"],request.form["pass_confirm"]):
 			return "Passwords must match!"
 		elif not user_exists(request.form["user"]):
-			g.db.execute('insert into entries (username, password_hash) values (?, ?)',
-				[request.form["user"], encrypt(request.form["password"])])
-			g.db.commit()
+			# Creates a user object with this username and password hash
+			user = User(request.form["user"], encrypt(request.form["password"]))
+			# Adds this user to the database
+			db.session.add(user)
+			db.session.commit()
+
 			return redirect(url_for('home'))
 
 	return render_template('signup.html', error=error)
 
+####################################################################################
+
+# HELPER FUNCTIONS
+
 # validates login (for login)
 def authenticate(user, password):
-	cur = g.db.execute('select username, password_hash from entries where username = ?', 
-		[user])
-	rv = [dict(username=row[0], password_hash=row[1]) for row in cur.fetchall()]
-
-	if rv:
-		first = rv[0]
-		if security.check_password_hash(first['password_hash'], password):
-			return True
+	user = User.query.filter_by(username=user).first()
+	if user and security.check_password_hash(user.password_hash, password):
+		return True
 	return False
 
 # validates uniqueness (for signup)
 def user_exists(user):
-	cur = g.db.execute('select username, password_hash from entries where username = ?', 
-		[user])
-	rv = [dict(username=row[0], password_hash=row[1]) for row in cur.fetchall()]
-	if rv:
-		return True
-	return False
+	user = User.query.filter_by(username=user).first()
+	return True if user else False
 
 def encrypt(string):
 	return security.generate_password_hash(string)
 
-def connect_db():
-    return sqlite3.connect(app.config['DATABASE'])
+###################################################################################
 
-def init_db():
-	with closing(connect_db()) as db:
-		with app.open_resource('schema.sql', mode='r') as f:
-			db.cursor().executescript(f.read())
-		db.commit()
+# MODEL CLASSES
 
-@app.before_request
-def before_request():
-	g.db = connect_db();
+# User class that is to be stored in the database by SQLAlchemy
+class User(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	username = db.Column(db.String(80), unique=True)
+	password_hash = db.Column(db.String(120))
 
-@app.teardown_request
-def teardown_request(exception):
-	db = getattr(g, 'db', None)
-	if db is not None:
-		db.close()
+	def __init__(self, username, password_hash):
+		self.username = username
+		self.password_hash = password_hash
+
+	def __repr__(self):
+		return '<Name %r>' % self.username
 
 if __name__ == "__main__":
 	app.run(host="0.0.0.0")
