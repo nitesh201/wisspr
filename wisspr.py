@@ -23,7 +23,7 @@ db = SQLAlchemy(app)
 
 ####################################################################################
 
-# ROUTES
+#################################### ROUTES ########################################
 
 @app.route('/')
 def home():
@@ -70,36 +70,41 @@ def signup():
 
 ####################################################################################
 
-# HELPER FUNCTIONS
+############################### HELPER FUNCTIONS ###################################
 
 # validates login (for login)
-def authenticate(user, password):
-	user = User.query.filter_by(username=user).first()
+def authenticate(username, password):
+	user = User.query.filter_by(username=username).first()
 	if user and security.check_password_hash(user.password_hash, password):
 		return True
 	return False
 
 # validates uniqueness (for signup)
-def user_exists(user):
-	user = User.query.filter_by(username=user).first()
-	return True if user else False
+def user_exists(username):
+	return True if get_user(username) else False
 
 def encrypt(string):
 	return security.generate_password_hash(string)
 
+# pulls the user with this name
+def get_user(username):
+	return User.query.filter_by(username=username).first()
+
 ###################################################################################
 
-# MODEL CLASSES
+################################# MODEL CLASSES ###################################
 
 # User class that is to be stored in the database by SQLAlchemy
 class User(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	username = db.Column(db.String(80), unique=True)
 	password_hash = db.Column(db.String(120))
+	isOnline = db.Column(db.Boolean)
 
 	def __init__(self, username, password_hash):
 		self.username = username
 		self.password_hash = password_hash
+		self.isOnline = False
 
 	def __repr__(self):
 		return '<Name %r>' % self.username
