@@ -1,6 +1,8 @@
 import sqlite3
+import os
 from flask import Flask, request, session, url_for, abort, render_template, \
 flash, g, redirect
+from flask.ext.sqlalchemy import SQLAlchemy
 from werkzeug import security
 from contextlib import closing
 
@@ -11,6 +13,8 @@ SECRET_KEY = 'development key'
 
 app = Flask(__name__)
 app.config.from_object(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
+db = SQLAlchemy(app)
 #app.config.from_envvar('WISSPR_SETTINGS', silent=True)
 
 @app.route('/')
