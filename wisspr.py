@@ -5,7 +5,7 @@ from werkzeug import security
 from contextlib import closing
 
 # configiration
-DATABASE = '/tmp/wisspr.db'
+DATABASE = 'wisspr.db'
 DEBUG = True
 SECRET_KEY = 'development key'
 
