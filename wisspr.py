@@ -1,10 +1,8 @@
-import sqlite3
 import os
 from flask import Flask, request, session, url_for, abort, render_template, \
 flash, g, redirect
 from flask.ext.sqlalchemy import SQLAlchemy
 from werkzeug import security
-from contextlib import closing
 
 # configiration
 DATABASE = 'wisspr.db'
@@ -99,12 +97,10 @@ class User(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	username = db.Column(db.String(80), unique=True)
 	password_hash = db.Column(db.String(120))
-	isOnline = db.Column(db.Boolean)
 
 	def __init__(self, username, password_hash):
 		self.username = username
 		self.password_hash = password_hash
-		self.isOnline = False
 
 	def __repr__(self):
 		return '<Name %r>' % self.username
