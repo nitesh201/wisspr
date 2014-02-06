@@ -3,7 +3,6 @@ from flask import Flask, request, session, url_for, abort, render_template, \
 flash, g, redirect
 from werkzeug import security
 from contextlib import closing
-import requests
 
 # configiration
 DATABASE = '/tmp/wisspr.db'
