@@ -4,8 +4,9 @@ flash, g, redirect, Response
 from flask.ext.sqlalchemy import SQLAlchemy
 from werkzeug import security
 from gevent import monkey
-from socketio.server import SocketIOServer
 from socketio import socketio_manage
+from socketio.server import SocketIOServer
+from socketio.namespace import BaseNamespace
 
 monkey.patch_all
 
@@ -138,6 +139,10 @@ class ChatNamespace(BaseNamespace):
 
     def recv_disconnect(self):
         self.log("Client disconnected")
+
+    def on_join(self, name):
+        self.log("%s joined chat" % user.username)
+        return True, name
 	
 
 if __name__ == "__main__":
