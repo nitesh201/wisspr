@@ -1,4 +1,5 @@
 <div id="chatbox">
+	<h2> Current Conversation </h2>
 	{% if conversation %}
 		{% for message in conversation.messages %}
 			{{ message.represent() }} <br>
@@ -13,4 +14,14 @@
 	{% else %}
 		<p> At some point we want this to automatically load the latest conversation </p>
 	{% endif %}
+</div>
+
+<div id="active_conversations"> 
+	<h2> My Conversations </h2>
+	{% for conversation in user.conversations %}	
+		<a href = {{ url_for("show_messages", conversation_id=conversation.id) }}>
+			{{ conversation.name }}
+		</a>
+		<br>
+	{% endfor %}
 </div>

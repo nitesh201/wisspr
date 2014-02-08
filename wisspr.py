@@ -4,6 +4,9 @@ flash, g, redirect, Response
 from flask.ext.sqlalchemy import SQLAlchemy
 from werkzeug import security
 import datetime
+import redis
+import gevent
+from flask_sockets import Sockets
 
 # configiration
 DATABASE = 'wisspr.db'
@@ -20,6 +23,7 @@ if not os.environ.has_key('DATABASE_URL'):
         os.environ['DATABASE_URL'] = 'sqlite:////tmp/dev.db'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 db = SQLAlchemy(app)
+sockets = Sockets(app)
 
 ####################################################################################
 
@@ -124,6 +128,16 @@ def show_messages(conversation_id):
 		db.session.commit()
 
 	return render_template('home.html', user=user, conversation=this_conversation)
+
+@app.route('/test_socket')
+def test_socket():
+	return render_template('test_socket.html')
+
+@sockets.route('/echo')
+def echo_socket(ws):
+	while True:
+		message = ws.receive()
+		ws.send(message)
 
 ####################################################################################
 
