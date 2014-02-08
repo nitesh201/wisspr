@@ -75,7 +75,6 @@ def signup():
 
 	return render_template('signup.html', error=error)
 
-<<<<<<< HEAD
 @app.route('/addfriend', methods=["POST"])
 def add_friend():
 	if "username" in session and get_user_by_name(request.form["friend"]):
@@ -95,8 +94,6 @@ def socketio(remaining):
                          exc_info=True)
     return Response()
 
-=======
->>>>>>> a801d4723bab6093c5f00283aad8d06a00379ec4
 ####################################################################################
 
 ############################### HELPER FUNCTIONS ###################################
