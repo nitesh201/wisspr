@@ -11,13 +11,21 @@
 		{% endif %}
 		{% if user %}
 			<h2> Welcome {{ user.username }}! </h2>
+            <h3> Friends: </h3>
+                {% for friend in user.friends %}
+                    <h4> {{ friend.name }}
+                        {% if friend.isOnline() %} 
+                            ONLINE 
+                        {% else %} 
+                            OFFLINE
+                        {% endif %} 
+                    </h4>
+                {% endfor %}
 			<form action="/logout" method="get">
 				<div class="button">
 					<button type="submit">Logout</button>
 				</div>
 			</form>
-		<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
-		<script src="{{ url_for('static', filename='scripts/socket.io.min.js') }}"></script>
 		{% else %}
 			<form action="/login" method="post">
 				<div>

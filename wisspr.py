@@ -28,7 +28,7 @@ db = SQLAlchemy(app)
 def home():
 	user = None
 	if "username" in session:
-		return render_template('home.html', user = get_user_by_name(session["username"]))
+		user = get_user_by_name(session["username"])
 	return render_template('home.html', user = user)
 
 @app.route('/login', methods=["GET", "POST"])
@@ -38,6 +38,7 @@ def login():
 		if authenticate(request.form["user"], request.form["password"]):
 			session['username'] = request.form["user"]
 			get_user_by_name(session['username']).online_status = True
+			db.session.commit()
 			return redirect(url_for('home'))
 		else:
 			error = 'Invalid username/password'
@@ -48,6 +49,7 @@ def login():
 def logout():
 	if "username" in session:
 		get_user_by_name(session['username']).online_status = False
+		db.session.commit()
 		session.pop('username')
 		flash('You were logged out')
 	return redirect(url_for('home'))
@@ -84,15 +86,6 @@ def add_friend():
 		db.session.add(friend)
 		db.session.commit()
 	return redirect(url_for('home'))
-
-@app.route('/socket.io/<path:remaining>')
-def socketio(remaining):
-    try:
-        socketio_manage(request.environ, {'/chat': ChatNamespace}, request)
-    except:
-        app.logger.error("Exception while handling socketio connection",
-                         exc_info=True)
-    return Response()
 
 ####################################################################################
 
@@ -144,40 +137,20 @@ class Friend(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	friend_of = db.Column(db.Integer, db.ForeignKey('user.id'))
 	name = db.Column(db.String(80))
-	isOnline = False
 
 	def __init__(self, friend_of, name):
 		self.friend_of = friend_of
 		self.name = name
-		self.isOnline = get_user_by_name(name).online_status
 
 	def __repr__(self):
 		return '%r' % self.name
 
+	def isOnline(self):
+		return get_user_by_name(self.name).online_status
+
+
 
 # TODO: Implement "conversation" class
-
-class ChatNamespace(BaseNamespace):
-    def initialize(self):
-        self.logger = app.logger
-        self.log("Socketio session started")
-
-    def log(self, message):
-        self.logger.info("[{0}] {1}".format(self.socket.sessid, message))
-
-    def recv_connect(self):
-        self.log("New connection")
-
-    def recv_disconnect(self):
-        self.log("Client disconnected")
-
-    def on_join(self, name):
-        self.log("%s joined chat" % user.username)
-        return True, name
-
-    def on_message(self, message):
-    	self.log('got a message: %s' % message)
-    	return True, message
 
 if __name__ == "__main__":
 	app.run(host="0.0.0.0")
