@@ -1,10 +1,11 @@
 import os
 from flask import Flask, request, session, url_for, abort, render_template, \
-flash, g, redirect
+flash, g, redirect, Response
 from flask.ext.sqlalchemy import SQLAlchemy
 from werkzeug import security
 from gevent import monkey
 from socketio.server import SocketIOServer
+from socketio import socketio_manage
 
 monkey.patch_all
 
@@ -73,6 +74,15 @@ def signup():
 
 	return render_template('signup.html', error=error)
 
+@application.route('/socket.io/<path:remaining>')
+def socketio(remaining):
+    try:
+        socketio_manage(request.environ, {'/chat': ChatNamespace}, request)
+    except:
+        application.logger.error("Exception while handling socketio connection",
+                         exc_info=True)
+    return Response()
+
 ####################################################################################
 
 ############################### HELPER FUNCTIONS ###################################
@@ -114,6 +124,20 @@ class User(db.Model):
 
 # Class that stores 
 class FriendsList(db.Model):
+
+class ChatNamespace(BaseNamespace):
+    def initialize(self):
+        self.logger = application.logger
+        self.log("Socketio session started")
+
+    def log(self, message):
+        self.logger.info("[{0}] {1}".format(self.socket.sessid, message))
+
+    def recv_connect(self):
+        self.log("New connection")
+
+    def recv_disconnect(self):
+        self.log("Client disconnected")
 	
 
 if __name__ == "__main__":
