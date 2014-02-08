@@ -144,7 +144,6 @@ class ChatNamespace(BaseNamespace):
     def on_message(self, message):
     	self.log('got a message: %s' % message)
     	return True, message
-	
 
 if __name__ == "__main__":
 	app.run(host="0.0.0.0")
