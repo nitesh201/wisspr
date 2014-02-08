@@ -28,7 +28,7 @@ db = SQLAlchemy(app)
 def home():
 	user = None
 	if "username" in session:
-		return render_template('home.html', user = get_user(session["username"]))
+		user = get_user_by_name(session["username"])
 	return render_template('home.html', user = user)
 
 @app.route('/login', methods=["GET", "POST"])
@@ -37,6 +37,8 @@ def login():
 	if request.method == 'POST':
 		if authenticate(request.form["user"], request.form["password"]):
 			session['username'] = request.form["user"]
+			get_user_by_name(session['username']).online_status = True
+			db.session.commit()
 			return redirect(url_for('home'))
 		else:
 			error = 'Invalid username/password'
@@ -45,8 +47,11 @@ def login():
 
 @app.route('/logout')
 def logout():
-	session.pop('username', None)
-	flash('You were logged out')
+	if "username" in session:
+		get_user_by_name(session['username']).online_status = False
+		db.session.commit()
+		session.pop('username')
+		flash('You were logged out')
 	return redirect(url_for('home'))
 
 @app.route('/signup', methods=["GET", "POST"])
@@ -72,6 +77,16 @@ def signup():
 
 	return render_template('signup.html', error=error)
 
+@app.route('/addfriend', methods=["POST"])
+def add_friend():
+	if "username" in session and get_user_by_name(request.form["friend"]):
+		user = get_user_by_name(session["username"])
+		# Creates a friend and stores it in db using a one-to-many relationship
+		friend = Friend(user.id, request.form["friend"])
+		db.session.add(friend)
+		db.session.commit()
+	return redirect(url_for('home'))
+
 ####################################################################################
 
 ############################### HELPER FUNCTIONS ###################################
@@ -85,14 +100,18 @@ def authenticate(username, password):
 
 # validates uniqueness (for signup)
 def user_exists(username):
-	return True if get_user(username) else False
+	return True if get_user_by_name(username) else False
 
 def encrypt(string):
 	return security.generate_password_hash(string)
 
 # pulls the user with this name
-def get_user(username):
+def get_user_by_name(username):
 	return User.query.filter_by(username=username).first()
+
+# pulls the user with this id
+def get_user_by_id(id):
+	return User.query.get(id).first()
 
 ###################################################################################
 
@@ -103,6 +122,8 @@ class User(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	username = db.Column(db.String(80), unique=True)
 	password_hash = db.Column(db.String(120))
+	online_status = db.Column(db.Boolean, default = False)
+	friends = db.relationship('Friend', backref='user', lazy='dynamic')
 
 	def __init__(self, username, password_hash):
 		self.username = username
@@ -110,6 +131,26 @@ class User(db.Model):
 
 	def __repr__(self):
 		return '<Name %r>' % self.username
+
+# User's "friend" that includes
+class Friend(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	friend_of = db.Column(db.Integer, db.ForeignKey('user.id'))
+	name = db.Column(db.String(80))
+
+	def __init__(self, friend_of, name):
+		self.friend_of = friend_of
+		self.name = name
+
+	def __repr__(self):
+		return '%r' % self.name
+
+	def isOnline(self):
+		return get_user_by_name(self.name).online_status
+
+
+
+# TODO: Implement "conversation" class
 
 if __name__ == "__main__":
 	app.run(host="0.0.0.0")
