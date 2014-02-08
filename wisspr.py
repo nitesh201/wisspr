@@ -63,8 +63,10 @@ def signup():
 	# If you've attempted to signup
 	elif request.method == 'POST':
 		if not security.safe_str_cmp(request.form["password"],request.form["pass_confirm"]):
-			return "Passwords must match!"
-		elif not user_exists(request.form["user"]):
+			error = "Passwords must match"
+		elif user_exists(request.form["user"]):
+			error = "Username taken"
+		else:
 			# Creates a user object with this username and password hash
 			user = User(request.form["user"], encrypt(request.form["password"]))
 			# Adds this user to the database

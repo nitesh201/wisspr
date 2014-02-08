@@ -6,6 +6,9 @@
     </head>
     <body>
         <h1> wisspr </h1>
+        {% if error %}
+            <h2> {{ error }} </h2>
+        {% endif %}
         <form action="/signup" method="post">
             <div>
                 <label for="user">Username:</label>
