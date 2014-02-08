@@ -11,26 +11,43 @@
         {% endif %}
         {% if user %}
             <h2> Welcome {{ user.username }}! </h2>
+            {% if user.friends %}
+                {% for friend in user.friends %}
+                    <p>{{ friend.name }} 
+                        {% if friend.isOnline %}
+                            is online!
+                        {% endif %}
+                    </p>
+                {% endfor %}
+            {% endif %}
+            <form action="/addfriend" method="post">
+                <div>
+                    <label for="username">Username:</label>
+                    <input type="text" name="friend" required/>
+                </div>
+            </form>
+
             <form action="/logout" method="get">
                 <div class="button">
                     <button type="submit">Logout</button>
                 </div>
             </form>
-        <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
-        <script src="{{ url_for('static', filename='scripts/socket.io.min.js') }}"></script>
-        <script>
-            $(function(){
-                console.log("Welcome to wisspr");
-                var socket = io.connect('/chat');
-                socket.on('connect', function () {
-                    alert("You are connected to the chat server");
+
+            <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+            <script src="{{ url_for('static', filename='scripts/socket.io.min.js') }}"></script>
+            <script>
+                $(function(){
+                    console.log("Welcome to wisspr");
+                    var socket = io.connect('/chat');
                     socket.on('connect', function () {
-                        socket.emit('join', 'Bob', function(joined, name){
-                            console.log(joined,name);
+                        alert("You are connected to the chat server");
+                        socket.on('connect', function () {
+                            socket.emit('join', 'Bob', function(joined, name){
+                                console.log(joined,name);
+                            });
                         });
-                    });
-            });
-        </script>
+                });
+            </script>
         {% else %}
             <form action="/login" method="post">
                 <div>
