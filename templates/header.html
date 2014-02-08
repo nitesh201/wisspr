@@ -1,15 +1,19 @@
-<h1>wisspr</h1>
+<div class="header">
+	<h1 class="title">wisspr</h1>
 
-{% if user %}
-<form action="/logout" method="get">
-	<div class="button">
-		<button type="submit">Logout</button>
+	<div class="signup-logout-button">
+		{% if user %}
+		<form action="/logout" method="get">
+			<div class="button">
+				<button type="submit">Logout</button>
+			</div>
+		</form>
+		{% else %}
+		<form action="/signup" method="get">
+			<div class="button">
+				<button type="submit">Signup</button>
+			</div>
+		</form>
+		{% endif %}
 	</div>
-</form>
-{% else %}
-<form action="/signup" method="get">
-	<div class="button">
-		<button type="submit">Signup</button>
-	</div>
-</form>
-{% endif %}
+</div>

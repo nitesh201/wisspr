@@ -2,29 +2,13 @@
 {% block title %}Home{% endblock %}
 {% block head %}
 {{ super() }}
-<style type="text/css">
-.important { color: #336699; }
-</style>
 {% endblock %}
 {% block body %}
 {% if user %}
-<h2> Welcome {{ user.username }}! </h2>
+<h2 > Welcome {{ user.username }}! </h2>
 <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
 <script src="{{ url_for('static', filename='scripts/socket.io.min.js') }}"></script>
 {% else %}
-<form action="/login" method="post">
-	<div>
-		<label for="username">Username:</label>
-		<input type="text" name="user" required/>
-	</div>
-	<div>
-		<label for="password">Password:</label>
-		<input type="password" name="password" required/>
-	</div>
-
-	<div class="button">
-		<button type="submit">Login</button>
-	</div>
-</form>  
+{% include "login.html" %}
 {% endif %}  
 {% endblock %}
