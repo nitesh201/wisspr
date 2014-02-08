@@ -1,14 +1,20 @@
 {% extends "layout.html" %}
+
 {% block title %}Home{% endblock %}
 {% block head %}
 {{ super() }}
 {% endblock %}
+
 {% block body %}
+
 {% if user %}
 <h2 > Welcome {{ user.username }}! </h2>
 {% include "friends.html" %}
 {% include "conversation.html" %}
+
 {% else %}
+
 {% include "login.html" %}
 {% endif %}  
+
 {% endblock %}

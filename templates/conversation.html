@@ -1,0 +1,16 @@
+<div id="chatbox">
+	{% if conversation %}
+		{% for message in conversation.messages %}
+			{{ message.represent() }} <br>
+		{% endfor %}
+		<form action="{{ url_for("show_messages", conversation_id = conversation.id)}}" method="post">
+			<div>
+				<input type="text" name="message" required/>
+				<button type="submit">Send</button>
+			</div>
+		</form>
+
+	{% else %}
+		<p> At some point we want this to automatically load the latest conversation </p>
+	{% endif %}
+</div>

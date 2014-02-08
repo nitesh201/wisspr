@@ -30,7 +30,7 @@ def home():
 	user = None
 	if is_logged_in():
 		user = get_user_by_name(session["username"])
-	return render_template('home.html', user = user)
+	return render_template('home.html', user=user)
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
@@ -98,25 +98,32 @@ def create_conversation_with(friend):
 
 		if isFriend:
 			conversation = Conversation(user.id, friend)
+			conversation.users.append(user)
+			conversation.users.append(get_user_by_name(friend))
 			db.session.add(conversation)
 			db.session.commit()
-			print "Showing"
-			print conversation.id
 			return redirect(url_for('show_messages', conversation_id=conversation.id))
 	return redirect(url_for('home'))
 
-@app.route('/messages/show/<conversation_id>')
+@app.route('/messages/show/<conversation_id>', methods=["POST", "GET"])
 def show_messages(conversation_id):
 	this_conversation = None
+	canAccess = False
+	user = None
+	
 	if is_logged_in:
 		user = get_user_by_name(session["username"])
-		canAccess = False
 		for conversation in user.conversations:
-			if conversation.id == conversation_id:
+			if conversation.id == int(conversation_id):
 				canAccess = True
 				this_conversation = conversation
 
-	return redirect(url_for('home'), conversation = this_conversation)
+	if request.method == "POST" and canAccess:
+		message = Message(conversation_id, request.form["message"], user.id)
+		db.session.add(message)
+		db.session.commit()
+
+	return render_template('home.html', user=user, conversation=this_conversation)
 
 ####################################################################################
 
