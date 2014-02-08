@@ -1,56 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <title>wisspr</title>
-    </head>
-    <body>
-        <h1> wisspr </h1>
-        {% if error %}
-            <h2> {{ error }} </h2>
-        {% endif %}
-        {% if user %}
-            <h2> Welcome {{ user.username }}! </h2>
-            <form action="/logout" method="get">
-                <div class="button">
-                    <button type="submit">Logout</button>
-                </div>
-            </form>
-        <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
-        <script src="{{ url_for('static', filename='scripts/socket.io.min.js') }}"></script>
-        <script>
-            $(function(){
-                console.log("Welcome to wisspr");
-                var socket = io.connect('/chat');
-                socket.on('connect', function () {
-                    alert("You are connected to the chat server");
-                    socket.on('connect', function () {
-                        socket.emit('join', 'Bob', function(joined, name){
-                            console.log(joined,name);
-                        });
-                    });
-            });
-        </script>
-        {% else %}
-            <form action="/login" method="post">
-                <div>
-                    <label for="username">Username:</label>
-                    <input type="text" name="user" required/>
-                </div>
-                <div>
-                    <label for="password">Password:</label>
-                    <input type="password" name="password" required/>
-                </div>
+	<head>
+		<meta charset="utf-8">
+		<title>wisspr</title>
+	</head>
+	<body>
+		<h1> wisspr </h1>
+		{% if error %}
+			<h2> {{ error }} </h2>
+		{% endif %}
+		{% if user %}
+			<h2> Welcome {{ user.username }}! </h2>
+			<form action="/logout" method="get">
+				<div class="button">
+					<button type="submit">Logout</button>
+				</div>
+			</form>
+		<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+		<script src="{{ url_for('static', filename='scripts/socket.io.min.js') }}"></script>
+		{% else %}
+			<form action="/login" method="post">
+				<div>
+					<label for="username">Username:</label>
+					<input type="text" name="user" required/>
+				</div>
+				<div>
+					<label for="password">Password:</label>
+					<input type="password" name="password" required/>
+				</div>
 
-                <div class="button">
-                    <button type="submit">Login</button>
-                </div>
-            </form>
-            <form action="/signup" method="get">
-                <div class="button">
-                    <button type="submit">Signup</button>
-                </div>
-            </form>  
-        {% endif %}  
-    </body>
+				<div class="button">
+					<button type="submit">Login</button>
+				</div>
+			</form>
+			<form action="/signup" method="get">
+				<div class="button">
+					<button type="submit">Signup</button>
+				</div>
+			</form>  
+		{% endif %}  
+	</body>
 </html>

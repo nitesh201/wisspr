@@ -2,12 +2,7 @@ import os
 from flask import Flask, request, session, url_for, abort, render_template, \
 flash, g, redirect, Response
 from flask.ext.sqlalchemy import SQLAlchemy
-from gevent import monkey
 from werkzeug import security
-from socketio import socketio_manage
-from socketio.namespace import BaseNamespace
-
-monkey.patch_all()
 
 # configiration
 DATABASE = 'wisspr.db'
@@ -77,15 +72,6 @@ def signup():
 
 	return render_template('signup.html', error=error)
 
-@app.route('/socket.io/<path:remaining>')
-def socketio(remaining):
-    try:
-        socketio_manage(request.environ, {'/chat': ChatNamespace}, request)
-    except:
-        app.logger.error("Exception while handling socketio connection",
-                         exc_info=True)
-    return Response()
-
 ####################################################################################
 
 ############################### HELPER FUNCTIONS ###################################
@@ -124,29 +110,6 @@ class User(db.Model):
 
 	def __repr__(self):
 		return '<Name %r>' % self.username
-
-# Class that stores 
-class ChatNamespace(BaseNamespace):
-    def initialize(self):
-        self.logger = app.logger
-        self.log("Socketio session started")
-
-    def log(self, message):
-        self.logger.info("[{0}] {1}".format(self.socket.sessid, message))
-
-    def recv_connect(self):
-        self.log("New connection")
-
-    def recv_disconnect(self):
-        self.log("Client disconnected")
-
-    def on_join(self, name):
-        self.log("%s joined chat" % user.username)
-        return True, name
-
-    def on_message(self, message):
-    	self.log('got a message: %s' % message)
-    	return True, message
 
 if __name__ == "__main__":
 	app.run(host="0.0.0.0")
