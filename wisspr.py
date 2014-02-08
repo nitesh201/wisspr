@@ -3,6 +3,7 @@ from flask import Flask, request, session, url_for, abort, render_template, \
 flash, g, redirect, Response
 from flask.ext.sqlalchemy import SQLAlchemy
 from werkzeug import security
+import datetime
 
 # configiration
 DATABASE = 'wisspr.db'
@@ -124,6 +125,7 @@ class User(db.Model):
 	password_hash = db.Column(db.String(120))
 	online_status = db.Column(db.Boolean, default = False)
 	friends = db.relationship('Friend', backref='user', lazy='dynamic')
+	conversations = db.relationship('Conversation', backref='owner', lazy='dynamic')
 
 	def __init__(self, username, password_hash):
 		self.username = username
@@ -147,6 +149,25 @@ class Friend(db.Model):
 
 	def isOnline(self):
 		return get_user_by_name(self.name).online_status
+
+class Conversation(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	message = db.relationship('Message', backref='conversation', lazy='dynamic')
+	name = db.Column(db.String(50))
+	creator = db.Column(db.Integer)
+	lastModified = dbColumn(db.DateTime)
+
+
+	def __init__(self, conversationName):
+		self.name=conversationName
+		self.creator= owner.id
+		self.updateTime()
+
+	def updateTime(self):
+		self.lastModified=datetime.datetime.now()
+
+
+
 
 
 
