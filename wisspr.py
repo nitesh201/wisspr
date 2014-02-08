@@ -27,7 +27,7 @@ db = SQLAlchemy(app)
 @app.route('/')
 def home():
 	user = None
-	if "username" in session:
+	if is_logged_in():
 		user = get_user_by_name(session["username"])
 	return render_template('home.html', user = user)
 
@@ -47,7 +47,7 @@ def login():
 
 @app.route('/logout')
 def logout():
-	if "username" in session:
+	if is_logged_in():
 		get_user_by_name(session['username']).online_status = False
 		db.session.commit()
 		session.pop('username')
@@ -67,9 +67,7 @@ def signup():
 		elif user_exists(request.form["user"]):
 			error = "Username taken"
 		else:
-			# Creates a user object with this username and password hash
 			user = User(request.form["user"], encrypt(request.form["password"]))
-			# Adds this user to the database
 			db.session.add(user)
 			db.session.commit()
 
@@ -79,7 +77,7 @@ def signup():
 
 @app.route('/addfriend', methods=["POST"])
 def add_friend():
-	if "username" in session and get_user_by_name(request.form["friend"]):
+	if is_logged_in() in session and get_user_by_name(request.form["friend"]):
 		user = get_user_by_name(session["username"])
 		# Creates a friend and stores it in db using a one-to-many relationship
 		friend = Friend(user.id, request.form["friend"])
@@ -112,6 +110,10 @@ def get_user_by_name(username):
 # pulls the user with this id
 def get_user_by_id(id):
 	return User.query.get(id).first()
+
+# checks if user is logged in
+def is_logged_in():
+	return "username" in session
 
 ###################################################################################
 
@@ -148,7 +150,18 @@ class Friend(db.Model):
 	def isOnline(self):
 		return get_user_by_name(self.name).online_status
 
+class Message(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'))
+	data = db.Column(db.Text)
+	sender_id = db.Column(db.Integer)
 
+	def __init__(self, conversation_id, data, sender_id):
+		self.conversation_id = conversation_id
+		self.data = data
+		self.sender_id = sender_id
+
+	def poof(): pass
 
 # TODO: Implement "conversation" class
 
