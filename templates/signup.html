@@ -1,32 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <title>wisspr</title>
-    </head>
-    <body>
-        <h1> wisspr </h1>
-        {% if error %}
-            <h2> {{ error }} </h2>
-        {% endif %}
-        <form action="/signup" method="post">
-            <div>
-                <label for="user">Username:</label>
-                <input type="text" name="user" required/>
-            </div>
-            <div>
-                <label for="password">Password:</label>
-                <input type="password" name="password" required/>
-            </div>
-            <div>
-                <label for="pass_confirm">Confirm Password:</label>
-                <input type="password" name="pass_confirm" required/>
-            </div>
+{% extends "layout.html" %}
+{% block title %}Sign Up{% endblock %}
+{% block head %}
+{{ super() }}
+{% endblock %}
+{% block body %}
+<form action="{{ url_for("signup") }}" method="post">
+    <div>
+        <label for="user">Username:</label>
+        <input type="text" name="user" required/>
+    </div>
+    <div>
+        <label for="password">Password:</label>
+        <input type="password" name="password" required/>
+    </div>
+    <div>
+        <label for="pass_confirm">Confirm Password:</label>
+        <input type="password" name="pass_confirm" required/>
+    </div>
 
 
-        	<div class="button">
-        		<button type="submit">Signup</button>
-        	</div>
-        </form>
-    </body>
-</html>
+    <div class="button">
+        <button type="submit">Signup</button>
+    </div>
+</form> 
+{% endblock %}
