@@ -1,0 +1,15 @@
+<h1>wisspr</h1>
+
+{% if user %}
+<form action="/logout" method="get">
+	<div class="button">
+		<button type="submit">Logout</button>
+	</div>
+</form>
+{% else %}
+<form action="/signup" method="get">
+	<div class="button">
+		<button type="submit">Signup</button>
+	</div>
+</form>
+{% endif %}
