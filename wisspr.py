@@ -25,15 +25,18 @@ db = SQLAlchemy(app)
 
 @app.route('/')
 def home():
-	return render_template('home.html')
+	user = None
+	if "username" in session:
+		return render_template('home.html', user = get_user(session["username"]))
+	return render_template('home.html', user = user)
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
 	error = None
 	if request.method == 'POST':
 		if authenticate(request.form["user"], request.form["password"]):
-			session['logged_in'] = True
-			return render_template('app.html', error=error)
+			session['username'] = request.form["user"]
+			return redirect(url_for('home'))
 		else:
 			error = 'Invalid username/password'
 
@@ -41,7 +44,7 @@ def login():
 
 @app.route('/logout')
 def logout():
-	session.pop('logged_in', None)
+	session.pop('username', None)
 	flash('You were logged out')
 	return redirect(url_for('home'))
 
