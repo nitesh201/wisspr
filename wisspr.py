@@ -110,7 +110,7 @@ def get_user_by_name(username):
 
 # pulls the user with this id
 def get_user_by_id(id):
-	return User.query.get(id).first()
+	return User.query.get(id)
 
 # checks if user is logged in
 def is_logged_in():
@@ -120,6 +120,10 @@ def is_logged_in():
 
 ################################# MODEL CLASSES ###################################
 
+conversations = db.Table('conversations', 
+	db.Column('conversation_id', db.Integer, db.ForeignKey('conversation.id')),
+	db.Column('user_id', db.Integer, db.ForeignKey('user.id')))
+
 # User class that is to be stored in the database by SQLAlchemy
 class User(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
@@ -127,7 +131,8 @@ class User(db.Model):
 	password_hash = db.Column(db.String(120))
 	online_status = db.Column(db.Boolean, default = False)
 	friends = db.relationship('Friend', backref='user', lazy='dynamic')
-	conversations = db.relationship('Conversation', backref='owner', lazy='dynamic')
+	conversations = db.relationship('Conversation', secondary=conversations,
+		backref=db.backref('users', lazy='dynamic'))
 
 	def __init__(self, username, password_hash):
 		self.username = username
@@ -163,24 +168,31 @@ class Message(db.Model):
 		self.data = data
 		self.sender_id = sender_id
 
-	def poof(): pass
+	def __repr__(self):
+		return '<Message: %r>' % self.data
+
+	def represent(self):
+		return get_user_by_id(self.sender_id).username + ": " + self.data
+
+	def poof(self): pass
 
 class Conversation(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
-	message = db.relationship('Message', backref='conversation', lazy='dynamic')
+	messages = db.relationship('Message', backref='conversation', lazy='dynamic')
 	name = db.Column(db.String(50))
 	creator = db.Column(db.Integer)
-	lastModified = dbColumn(db.DateTime)
+	lastModified = db.Column(db.DateTime)
 
-	def __init__(self, conversationName):
+	def __init__(self, creator, conversationName):
 		self.name=conversationName
-		self.creator= owner.id
-		self.updateTime()
+		self.creator= creator
+		self.lastModified=datetime.datetime.now()
+
+	def __repr__(self):
+		return '<Conversation: %r>' % self.name
 
 	def updateTime(self):
 		self.lastModified=datetime.datetime.now()
-
-# TODO: Implement "conversation" class
 
 if __name__ == "__main__":
 	app.run(host="0.0.0.0")
