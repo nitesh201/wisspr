@@ -1,0 +1,14 @@
+<div id="friends_list"> 
+	<form action="{{url_for("add_friend")}}" method="post">
+		<div>
+			<label for="username">Add Friend:</label> <br>
+			<input type="text" name="friend" required/>
+			<button type="submit">Add</button>
+		</div>
+	</form> 
+	{% for friend in user.friends %}
+			{{ friend.name }}
+			{% if friend.isOnline() %} ONLINE {% else %} OFFLINE {% endif %}
+			<br>
+	{% endfor %}
+</div>

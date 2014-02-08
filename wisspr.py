@@ -76,15 +76,47 @@ def signup():
 
 	return render_template('signup.html', error=error)
 
-@app.route('/addfriend', methods=["POST"])
+@app.route('/add_friend', methods=["POST"])
 def add_friend():
-	if is_logged_in() in session and get_user_by_name(request.form["friend"]):
+	if is_logged_in() and get_user_by_name(request.form["friend"]):
 		user = get_user_by_name(session["username"])
 		# Creates a friend and stores it in db using a one-to-many relationship
 		friend = Friend(user.id, request.form["friend"])
 		db.session.add(friend)
 		db.session.commit()
 	return redirect(url_for('home'))
+
+@app.route('/messages/create/<friend>')
+def create_conversation_with(friend):
+	if is_logged_in:
+		user = get_user_by_name(session["username"])
+		isFriend = False
+		for person in user.friends:
+			if person.name == friend:
+				isFriend = True
+				break
+
+		if isFriend:
+			conversation = Conversation(user.id, friend)
+			db.session.add(conversation)
+			db.session.commit()
+			print "Showing"
+			print conversation.id
+			return redirect(url_for('show_messages', conversation_id=conversation.id))
+	return redirect(url_for('home'))
+
+@app.route('/messages/show/<conversation_id>')
+def show_messages(conversation_id):
+	this_conversation = None
+	if is_logged_in:
+		user = get_user_by_name(session["username"])
+		canAccess = False
+		for conversation in user.conversations:
+			if conversation.id == conversation_id:
+				canAccess = True
+				this_conversation = conversation
+
+	return redirect(url_for('home'), conversation = this_conversation)
 
 ####################################################################################
 

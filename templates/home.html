@@ -6,8 +6,8 @@
 {% block body %}
 {% if user %}
 <h2 > Welcome {{ user.username }}! </h2>
-<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
-<script src="{{ url_for('static', filename='scripts/socket.io.min.js') }}"></script>
+{% include "friends.html" %}
+{% include "conversation.html" %}
 {% else %}
 {% include "login.html" %}
 {% endif %}  
