@@ -3,6 +3,10 @@ from flask import Flask, request, session, url_for, abort, render_template, \
 flash, g, redirect
 from flask.ext.sqlalchemy import SQLAlchemy
 from werkzeug import security
+from gevent import monkey
+from socketio.server import SocketIOServer
+
+monkey.patch_all
 
 # configiration
 DATABASE = 'wisspr.db'
@@ -110,3 +114,7 @@ class User(db.Model):
 
 if __name__ == "__main__":
 	app.run(host="0.0.0.0")
+	SocketIOServer(
+        ('', app.config['PORT']), 
+        app,
+        resource="socket.io").serve_forever()
