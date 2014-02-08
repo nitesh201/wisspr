@@ -3,17 +3,16 @@ from flask import Flask, request, session, url_for, abort, render_template, \
 flash, g, redirect, Response
 from flask.ext.sqlalchemy import SQLAlchemy
 from werkzeug import security
-from gevent import monkey
 from socketio import socketio_manage
-from socketio.server import SocketIOServer
 from socketio.namespace import BaseNamespace
 
-monkey.patch_all
+monkey.patch_all()
 
 # configiration
 DATABASE = 'wisspr.db'
 DEBUG = True
 SECRET_KEY = 'development key'
+PORT = 5000
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -75,7 +74,7 @@ def signup():
 
 	return render_template('signup.html', error=error)
 
-@application.route('/socket.io/<path:remaining>')
+@app.route('/socket.io/<path:remaining>')
 def socketio(remaining):
     try:
         socketio_manage(request.environ, {'/chat': ChatNamespace}, request)
@@ -124,11 +123,9 @@ class User(db.Model):
 		return '<Name %r>' % self.username
 
 # Class that stores 
-class FriendsList(db.Model):
-
 class ChatNamespace(BaseNamespace):
     def initialize(self):
-        self.logger = application.logger
+        self.logger = app.logger
         self.log("Socketio session started")
 
     def log(self, message):
@@ -143,11 +140,11 @@ class ChatNamespace(BaseNamespace):
     def on_join(self, name):
         self.log("%s joined chat" % user.username)
         return True, name
+
+    def on_message(self, message):
+    	self.log('got a message: %s' % message)
+    	return True, message
 	
 
 if __name__ == "__main__":
 	app.run(host="0.0.0.0")
-	SocketIOServer(
-        ('', app.config['PORT']), 
-        app,
-        resource="socket.io").serve_forever()
