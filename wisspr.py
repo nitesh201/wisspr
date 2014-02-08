@@ -2,12 +2,7 @@ import os
 from flask import Flask, request, session, url_for, abort, render_template, \
 flash, g, redirect, Response
 from flask.ext.sqlalchemy import SQLAlchemy
-from gevent import monkey
 from werkzeug import security
-from socketio import socketio_manage
-from socketio.namespace import BaseNamespace
-
-monkey.patch_all()
 
 # configiration
 DATABASE = 'wisspr.db'
@@ -80,6 +75,7 @@ def signup():
 
 	return render_template('signup.html', error=error)
 
+<<<<<<< HEAD
 @app.route('/addfriend', methods=["POST"])
 def add_friend():
 	if "username" in session and get_user_by_name(request.form["friend"]):
@@ -99,6 +95,8 @@ def socketio(remaining):
                          exc_info=True)
     return Response()
 
+=======
+>>>>>>> a801d4723bab6093c5f00283aad8d06a00379ec4
 ####################################################################################
 
 ############################### HELPER FUNCTIONS ###################################
@@ -144,6 +142,7 @@ class User(db.Model):
 	def __repr__(self):
 		return '<Name %r>' % self.username
 
+<<<<<<< HEAD
 # User's "friend" that includes
 class Friend(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
@@ -184,5 +183,7 @@ class ChatNamespace(BaseNamespace):
     	self.log('got a message: %s' % message)
     	return True, message
 
+=======
+>>>>>>> a801d4723bab6093c5f00283aad8d06a00379ec4
 if __name__ == "__main__":
 	app.run(host="0.0.0.0")
