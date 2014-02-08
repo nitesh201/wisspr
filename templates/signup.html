@@ -1,26 +1,26 @@
 {% extends "layout.html" %}
 {% block title %}Sign Up{% endblock %}
 {% block head %}
-    {{ super() }}
+{{ super() }}
 {% endblock %}
 {% block body %}
-        <form action="/signup" method="post">
-            <div>
-                <label for="user">Username:</label>
-                <input type="text" name="user" required/>
-            </div>
-            <div>
-                <label for="password">Password:</label>
-                <input type="password" name="password" required/>
-            </div>
-            <div>
-                <label for="pass_confirm">Confirm Password:</label>
-                <input type="password" name="pass_confirm" required/>
-            </div>
+<form action="{{ url_for("signup") }}" method="post">
+    <div>
+        <label for="user">Username:</label>
+        <input type="text" name="user" required/>
+    </div>
+    <div>
+        <label for="password">Password:</label>
+        <input type="password" name="password" required/>
+    </div>
+    <div>
+        <label for="pass_confirm">Confirm Password:</label>
+        <input type="password" name="pass_confirm" required/>
+    </div>
 
 
-            <div class="button">
-                <button type="submit">Signup</button>
-            </div>
-        </form> 
+    <div class="button">
+        <button type="submit">Signup</button>
+    </div>
+</form> 
 {% endblock %}
