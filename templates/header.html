@@ -1,17 +1,17 @@
 <div class="header">
-	<h1 class="title">wisspr</h1>
+	<img src="{{url_for('static', filename='images/logo.jpg')}}" id="logo">
 
 	<div class="signup-logout-button">
 		{% if user %}
 		<form action="{{ url_for("logout")}}" method="get">
 			<div class="button">
-				<button type="submit">Logout</button>
+				<button class="header-button" type="submit">Logout</button>
 			</div>
 		</form>
 		{% else %}
 		<form action="{{ url_for("signup")}}" method="get">
 			<div class="button">
-				<button type="submit">Signup</button>
+				<button class="header-button" type="submit">Sign Up</button>
 			</div>
 		</form>
 		{% endif %}
