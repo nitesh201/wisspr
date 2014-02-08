@@ -2,6 +2,7 @@ import os
 from flask import Flask, request, session, url_for, abort, render_template, \
 flash, g, redirect, Response
 from flask.ext.sqlalchemy import SQLAlchemy
+from gevent import monkey
 from werkzeug import security
 from socketio import socketio_manage
 from socketio.namespace import BaseNamespace
@@ -79,7 +80,7 @@ def socketio(remaining):
     try:
         socketio_manage(request.environ, {'/chat': ChatNamespace}, request)
     except:
-        application.logger.error("Exception while handling socketio connection",
+        app.logger.error("Exception while handling socketio connection",
                          exc_info=True)
     return Response()
 
