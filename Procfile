@@ -1,1 +1,1 @@
-web: gunicorn wisspr:app
+web: gunicorn --worker-class socketio.sgunicorn.GeventSocketIOWorker run_server
