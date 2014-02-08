@@ -3,13 +3,13 @@
 
 	<div class="signup-logout-button">
 		{% if user %}
-		<form action="/logout" method="get">
+		<form action="{{ url_for("logout")}}" method="get">
 			<div class="button">
 				<button type="submit">Logout</button>
 			</div>
 		</form>
 		{% else %}
-		<form action="/signup" method="get">
+		<form action="{{ url_for("signup")}}" method="get">
 			<div class="button">
 				<button type="submit">Signup</button>
 			</div>
