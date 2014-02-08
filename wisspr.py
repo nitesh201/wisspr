@@ -112,6 +112,10 @@ class User(db.Model):
 	def __repr__(self):
 		return '<Name %r>' % self.username
 
+# Class that stores 
+class FriendsList(db.Model):
+	
+
 if __name__ == "__main__":
 	app.run(host="0.0.0.0")
 	SocketIOServer(
