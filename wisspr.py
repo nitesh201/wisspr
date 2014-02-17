@@ -1,8 +1,12 @@
+from gevent import monkey; monkey.patch_all()
+import threading
 import os
 from flask import Flask, request, session, url_for, abort, render_template, \
 flash, g, redirect, Response
 from flask.ext.sqlalchemy import SQLAlchemy
 from werkzeug import security
+from socketio import socketio_manage
+from socketio.namespace import BaseNamespace
 import datetime
 
 # configiration
@@ -17,7 +21,7 @@ app.config.from_object(__name__)
 # Checks whether or not we are running in the production or development environment.
 # In production, will use PostgreSQL. In development, will use sqlite3.
 if not os.environ.has_key('DATABASE_URL'):
-        os.environ['DATABASE_URL'] = 'sqlite:////tmp/dev.db'
+		os.environ['DATABASE_URL'] = 'sqlite:////tmp/dev.db'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 db = SQLAlchemy(app)
 
@@ -68,9 +72,7 @@ def signup():
 		elif user_exists(request.form["user"]):
 			error = "Username taken"
 		else:
-			user = User(request.form["user"], encrypt(request.form["password"]))
-			db.session.add(user)
-			db.session.commit()
+			save_to_db(User(request.form["user"], encrypt(request.form["password"])))
 
 			return redirect(url_for('home'))
 
@@ -80,10 +82,8 @@ def signup():
 def add_friend():
 	if is_logged_in() and get_user_by_name(request.form["friend"]):
 		user = get_user_by_name(session["username"])
-		# Creates a friend and stores it in db using a one-to-many relationship
-		friend = Friend(user.id, request.form["friend"])
-		db.session.add(friend)
-		db.session.commit()
+		# Creates a friend and stores it in db (one-to-many relationship)
+		save_to_db(Friend(user.id, request.form["friend"]))
 	return redirect(url_for('home'))
 
 @app.route('/messages/create/<friend>')
@@ -100,12 +100,11 @@ def create_conversation_with(friend):
 			conversation = Conversation(user.id, friend)
 			conversation.users.append(user)
 			conversation.users.append(get_user_by_name(friend))
-			db.session.add(conversation)
-			db.session.commit()
+			save_to_db(conversation)
 			return redirect(url_for('show_messages', conversation_id=conversation.id))
 	return redirect(url_for('home'))
 
-@app.route('/messages/show/<conversation_id>', methods=["POST", "GET"])
+@app.route('/messages/show/<conversation_id>')
 def show_messages(conversation_id):
 	this_conversation = None
 	canAccess = False
@@ -118,10 +117,6 @@ def show_messages(conversation_id):
 				canAccess = True
 				this_conversation = conversation
 
-	if request.method == "POST" and canAccess:
-		message = Message(conversation_id, request.form["message"], user.id)
-		db.session.add(message)
-		db.session.commit()
 
 	return render_template('home.html', user=user, conversation=this_conversation)
 
@@ -143,22 +138,31 @@ def user_exists(username):
 def encrypt(string):
 	return security.generate_password_hash(string)
 
-# pulls the user with this name
 def get_user_by_name(username):
 	return User.query.filter_by(username=username).first()
 
-# pulls the user with this id
+def get_conversation_by_name(name):
+	return Conversation.query.filter_by(name=name).first()
+
 def get_user_by_id(id):
 	return User.query.get(id)
 
-# checks if user is logged in
+def get_conversation_by_id(id):
+	return Conversation.query.get(id)
+
 def is_logged_in():
 	return "username" in session
+
+def save_to_db(data):
+	db.session.add(data)
+	db.session.commit()
 
 ###################################################################################
 
 ################################# MODEL CLASSES ###################################
 
+# Join table to model the User has many Conversations and Conversation has 
+# many Users relationship
 conversations = db.Table('conversations', 
 	db.Column('conversation_id', db.Integer, db.ForeignKey('conversation.id')),
 	db.Column('user_id', db.Integer, db.ForeignKey('user.id')))
@@ -232,6 +236,65 @@ class Conversation(db.Model):
 
 	def updateTime(self):
 		self.lastModified=datetime.datetime.now()
+
+#####################################################################################
+
+################################### SOCKET STUFF ####################################
+
+@app.route('/socket.io/<path:remaining>')
+def socketio(remaining):
+	try:
+		socketio_manage(request.environ, {'/chat' : ChatNamespace}, request)
+	except:
+		app.logger.error("Exception while handling socketio connection", exc_info=True)
+	return Response()
+
+class ChatNamespace(BaseNamespace):
+	def initialize(self):
+		self.logger = app.logger
+		self.log("Socketio session started")
+
+	def log(self, message):
+		self.logger.info("[{0}] {1}".format(self.socket.sessid, message))
+
+	def on_open(self, user_id, conversation_id):
+		user = get_user_by_id(user_id)
+		conversation = get_conversation_by_id(conversation_id)
+
+		if conversation not in user.conversations:
+			return False
+
+		self.user = user
+		self.conversation = conversation
+		self.log('Conversation {0} opened by {1}'.format(conversation.name, 
+			user.username))
+		self.session['conversation_id'] = conversation.id
+		self.session['user_id'] = user.id
+		return True
+
+	def on_send_message(self, message):
+		self.log('User message: {0}'.format(message))
+		save_to_db(Message(self.conversation.id, message, self.user.id))
+		self.send_all(message)
+		return True
+
+	def send_all(self, message):
+		pkt = dict(type="event", 
+				name='add_message', 
+				args=[self.user.username, message], 
+				endpoint=self.ns_name)
+		for sessid, socket in self.socket.server.sockets.iteritems():
+			# this will probably only send messages to users with the current
+			# conversation selected. should have a sessions var w/ active convos
+			if 'conversation_id' not in socket.session:
+				continue
+			if (self.conversation.id == socket.session['conversation_id'] 
+					and self.socket != socket):
+				socket.send_packet(pkt)
+
+	def on_poof(self, message, whole_conversation = False): 
+		pass
+
 
 if __name__ == "__main__":
 	app.run(host="0.0.0.0")

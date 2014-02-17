@@ -1,0 +1,23 @@
+{% block scripts %}
+<script src="/static/js/jquery.min.js"></script>
+<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+<script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js"></script>
+<script src="/static/js/socketio/socket.io.min.js"></script>
+
+<script type="text/javascript">
+    window.user_id = {{ user.id }};
+    window.conversation_id = {{ conversation.id }};
+    window.username = "{{ user.username }}";
+</script>
+<script src="/static/js/chat.js"></script>
+{% endblock %}
+
+<div id="lines">
+	{% for message in conversation.messages %}
+		{{ message.represent() }} <br>
+	{% endfor %}
+</div>
+<form id="send">
+	<input id="message">
+	<button>Send</button>
+</form>
