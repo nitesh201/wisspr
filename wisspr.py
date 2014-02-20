@@ -34,7 +34,8 @@ def home():
 	user = None
 	if is_logged_in():
 		user = get_user_by_name(session["username"])
-	return render_template('home.html', user=user)
+	return render_template('home.html', user=user, 
+		conversation=most_recent_conversation(user))
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
@@ -156,6 +157,18 @@ def is_logged_in():
 def save_to_db(data):
 	db.session.add(data)
 	db.session.commit()
+
+def most_recent_conversation(user):
+	if not user:
+		return None
+
+	# for now will use a naive algorithm [O(n)] to find most recent convo
+	most_recent = None
+	for conversation in user.conversations:
+		if not most_recent or conversation.lastModified > most_recent.lastModified:
+			most_recent = conversation
+
+	return most_recent
 
 ###################################################################################
 
