@@ -34,8 +34,11 @@ def home():
 	user = None
 	if is_logged_in():
 		user = get_user_by_name(session["username"])
-	return render_template('home.html', user=user, 
-		conversation=most_recent_conversation(user))
+		conversation = most_recent_conversation(user)
+		if conversation:
+			return redirect(url_for('show_messages', conversation_id=conversation.id))
+	
+	return render_template('home.html', user=user)
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
@@ -89,7 +92,7 @@ def add_friend():
 
 @app.route('/messages/create/<friend>')
 def create_conversation_with(friend):
-	if is_logged_in:
+	if is_logged_in():
 		user = get_user_by_name(session["username"])
 		isFriend = False
 		for person in user.friends:
@@ -108,14 +111,11 @@ def create_conversation_with(friend):
 @app.route('/messages/show/<conversation_id>')
 def show_messages(conversation_id):
 	this_conversation = None
-	canAccess = False
 	user = None
-	
-	if is_logged_in:
+	if is_logged_in():
 		user = get_user_by_name(session["username"])
 		for conversation in user.conversations:
 			if conversation.id == int(conversation_id):
-				canAccess = True
 				this_conversation = conversation
 
 
@@ -186,6 +186,7 @@ class User(db.Model):
 	username = db.Column(db.String(80), unique=True)
 	password_hash = db.Column(db.String(120))
 	online_status = db.Column(db.Boolean, default = False)
+	sessid = db.Column(db.Integer, default=None)
 	friends = db.relationship('Friend', backref='user', lazy='dynamic')
 	conversations = db.relationship('Conversation', secondary=conversations,
 		backref=db.backref('users', lazy='dynamic'))
@@ -273,6 +274,8 @@ class ChatNamespace(BaseNamespace):
 	def on_open(self, user_id, conversation_id):
 		user = get_user_by_id(user_id)
 		conversation = get_conversation_by_id(conversation_id)
+		user.sessid = self.socket.sessid
+		save_to_db(user)
 
 		if conversation not in user.conversations:
 			return False
@@ -296,14 +299,22 @@ class ChatNamespace(BaseNamespace):
 				name='add_message', 
 				args=[self.user.username, message], 
 				endpoint=self.ns_name)
-		for sessid, socket in self.socket.server.sockets.iteritems():
-			# this will probably only send messages to users with the current
-			# conversation selected. should have a sessions var w/ active convos
-			if 'conversation_id' not in socket.session:
-				continue
-			if (self.conversation.id == socket.session['conversation_id'] 
-					and self.socket != socket):
+
+		for user in self.conversation.users:
+			sessid = user.sessid
+			print sessid
+			socket = self.socket.server.get_socket(str(sessid))
+			if socket is not None:
 				socket.send_packet(pkt)
+
+		# for sessid, socket in self.socket.server.sockets.iteritems():
+		# 	# this will probably only send messages to users with the current
+		# 	# conversation selected. should have a sessions var w/ active convos
+
+		# 	if 'conversation_id' not in socket.session:
+		# 		continue
+		# 	if self.conversation.id == socket.session['conversation_id']:
+		# 		socket.send_packet(pkt)
 
 	def on_poof(self, message, whole_conversation = False): 
 		pass

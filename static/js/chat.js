@@ -29,7 +29,6 @@ $(function() {
 
     $(function () {
         $('#send').submit(function () {
-            message(window.username, $('#message').val());
             socket.emit('send message', $('#message').val());
             clear();
             return false;
