@@ -8,7 +8,7 @@
 		</div>
 	</form> 
 	{% for friend in user.friends %}
-			<a href="{{ url_for("create_conversation_with", friend=friend.name) }}"> {{ friend.name }} </a>
+			<a href="{{ url_for("create_conversation_with", friend=friend.username) }}"> {{ friend.username }} </a>
 			{% if friend.isOnline() %} ONLINE {% else %} OFFLINE {% endif %}
 			<br>
 	{% endfor %}
