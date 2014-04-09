@@ -1,3 +1,4 @@
-from wisspr import db
-db.drop_all()
-db.create_all()
+from wisspr import init_db, drop_db
+
+drop_db()
+init_db()
