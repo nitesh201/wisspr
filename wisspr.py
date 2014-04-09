@@ -44,6 +44,8 @@ def home():
 def login():
 	error = None
 	if request.method == 'POST':
+		print request.form
+		
 		if authenticate(request.form["user"], request.form["password"]):
 			session['username'] = request.form["user"]
 			get_user_by_name(session['username']).online_status = True
